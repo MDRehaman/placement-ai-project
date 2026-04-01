@@ -1,16 +1,66 @@
-from flask import Flask, render_template, request, redirect, session
-from flask_mysqldb import MySQL
+from flask import Flask, render_template, request, redirect, session, flash, url_for
+import sqlite3
+import os
+import random
 
 app = Flask(__name__)
 app.secret_key = "placement_secret"
 
-# MySQL Config
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Rehman@123'
-app.config['MYSQL_DB'] = 'placement_ai'
+# ================= SQLITE DB =================
 
-mysql = MySQL(app)
+def get_db():
+    conn = sqlite3.connect("database.db")
+    conn.row_factory = sqlite3.Row
+    return conn
+
+# ================= INIT DB =================
+
+@app.route('/init_db')
+def init_db():
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS students (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id TEXT UNIQUE,
+        password TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS questions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        company_name TEXT,
+        type TEXT,
+        question TEXT,
+        option1 TEXT,
+        option2 TEXT,
+        option3 TEXT,
+        option4 TEXT,
+        answer TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS results (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id TEXT,
+        company_name TEXT,
+        score INTEGER,
+        total INTEGER,
+        percentage REAL,
+        tech_score INTEGER,
+        apt_score INTEGER,
+        hr_score INTEGER,
+        date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+    return "DB Created ✅"
 
 # ================= AUTH =================
 
@@ -25,10 +75,11 @@ def login():
         student_id = request.form['student_id']
         password = request.form['password']
 
-        cur = mysql.connection.cursor()
-        cur.execute("SELECT * FROM students WHERE student_id=%s AND password=%s", (student_id, password))
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM students WHERE student_id=? AND password=?", (student_id, password))
         user = cur.fetchone()
-        cur.close()
+        conn.close()
 
         if user:
             session['student_id'] = student_id
@@ -42,10 +93,7 @@ def login():
 @app.route('/register')
 def register():
     return render_template("register.html")
-from flask import Flask, request, render_template,flash, redirect, url_for
-from werkzeug.security import generate_password_hash
 
-from flask import flash, redirect, url_for
 
 @app.route('/register_user', methods=['POST'])
 def register_user():
@@ -60,25 +108,22 @@ def register_user():
     if password != confirm_password:
         return "Passwords do not match"
 
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
 
-    # ✅ CHECK DUPLICATE
-    cur.execute("SELECT * FROM students WHERE student_id=%s", (student_id,))
+    cur.execute("SELECT * FROM students WHERE student_id=?", (student_id,))
     existing_user = cur.fetchone()
 
     if existing_user:
         flash('This ID is already registered', 'danger')
-        cur.close()
+        conn.close()
         return redirect(url_for('register'))
 
-    # ✅ INSERT NEW USER
-    cur.execute(
-        "INSERT INTO students(student_id, password) VALUES(%s, %s)",
-        (student_id, password)
-    )
+    cur.execute("INSERT INTO students(student_id, password) VALUES(?, ?)",
+                (student_id, password))
 
-    mysql.connection.commit()
-    cur.close()
+    conn.commit()
+    conn.close()
 
     return redirect('/login')
 
@@ -97,27 +142,30 @@ def dashboard():
 
 @app.route('/companies')
 def companies():
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
     cur.execute("SELECT * FROM companies")
     data = cur.fetchall()
-    cur.close()
+    conn.close()
     return render_template("companies.html", companies=data)
 
 # ================= QUESTIONS =================
 
 @app.route('/questions')
 def questions():
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
     cur.execute("SELECT DISTINCT company_name FROM questions")
     companies = cur.fetchall()
-    cur.close()
+    conn.close()
     return render_template("questions.html", companies=companies)
 
 
 @app.route('/questions/<company>')
 def company_questions(company):
 
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
 
     cur.execute("""
         SELECT id, question,
@@ -128,14 +176,14 @@ def company_questions(company):
             ELSE LOWER(type)
         END as type
         FROM questions
-        WHERE LOWER(company_name) = LOWER(%s)
+        WHERE LOWER(company_name) = LOWER(?)
     """, (company,))
 
     questions = cur.fetchall()
 
     print("FINAL QUESTIONS:", questions)
 
-    cur.close()
+    conn.close()
 
     return render_template(
         'company_questions.html',
@@ -143,39 +191,40 @@ def company_questions(company):
         company=company
     )
 
-
 # ================= TEST =================
 
 @app.route('/test')
 def test():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT DISTINCT company_name FROM test_questions")
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT DISTINCT company_name FROM questions")
     companies = cur.fetchall()
-    cur.close()
+    conn.close()
     return render_template("test.html", companies=companies, active_page="test")
 
-from flask import session
-import random
 
 @app.route('/start_test/<company>')
 def start_test(company):
 
-    company = company.lower()   # 🔥 FIX
+    company = company.lower()
 
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
 
     cur.execute("""
-        SELECT id, question, option1, option2, option3, option4, answer
+        SELECT id, question, option1, option2, option3, option4, answer, type
         FROM questions
-        WHERE LOWER(company_name)=%s
+        WHERE LOWER(company_name)=?
         LIMIT 10
     """, (company,))
 
     questions = cur.fetchall()
 
-    print("DEBUG QUESTIONS:", questions)  # 🔥 DEBUG
+    session['questions'] = questions  # 🔥 IMPORTANT
 
-    cur.close()
+    print("DEBUG QUESTIONS:", questions)
+
+    conn.close()
 
     return render_template('exam.html', questions=questions, company=company)
 
@@ -192,17 +241,16 @@ def submit_test():
     wrong = 0
     unanswered = 0
 
-    tech = apt = hr = 0   # 🔥 ADD
+    tech = apt = hr = 0
     tech_total = apt_total = hr_total = 0
 
     for q in questions:
         q_id = q[0]
         correct_ans = q[6]
-        q_type = q[7]   # 🔥 MAKE SURE type is included in session
+        q_type = q[7]
 
         user_ans = request.form.get(f'q{q_id}')
 
-        # Count totals
         if q_type == "tech":
             tech_total += 1
         elif q_type == "apt":
@@ -225,10 +273,8 @@ def submit_test():
         else:
             wrong += 1
 
-    # 🔥 PERCENTAGE CALCULATION
     percentage = (score / total) * 100 if total > 0 else 0
 
-    # 🔥 AI ANALYSIS
     if percentage >= 80:
         level = "Excellent 🚀"
     elif percentage >= 60:
@@ -275,23 +321,21 @@ def submit_test():
         "suggestions": suggestions
     }
 
-    # 🔥 SAVE TO DATABASE
     student_id = session.get('student_id')
     company = request.form.get('company')
 
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
 
-    cur.execute(
-        """INSERT INTO results(student_id, company_name, score, total, percentage,
+    cur.execute("""
+        INSERT INTO results(student_id, company_name, score, total, percentage,
         tech_score, apt_score, hr_score)
-        VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",
-        (student_id, company, score, total, percentage, tech, apt, hr)
-    )
+        VALUES (?,?,?,?,?,?,?,?)
+    """, (student_id, company, score, total, percentage, tech, apt, hr))
 
-    mysql.connection.commit()
-    cur.close()
+    conn.commit()
+    conn.close()
 
-    # 🔥 FINAL RETURN (ONLY ONE RETURN)
     return render_template(
         'result.html',
         score=score,
@@ -310,21 +354,22 @@ def history():
 
     student_id = session.get('student_id')
 
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
+
     cur.execute("""
         SELECT company_name, percentage, tech_score, apt_score, hr_score, date
         FROM results
-        WHERE student_id=%s
+        WHERE student_id=?
         ORDER BY date DESC
     """, (student_id,))
 
     data = cur.fetchall()
 
-    print("DATA FROM DB:", data)   # 🔥 ADD THIS
+    print("DATA FROM DB:", data)
 
-    cur.close()
+    conn.close()
 
-    # prepare lists for charts
     companies = [d[0] for d in data]
     scores = [d[1] for d in data]
 
@@ -334,12 +379,12 @@ def history():
         companies=companies,
         scores=scores,
         leaderboard=[],
-        latest_tech = data[-1][2] if data else 0,
-        latest_apt = data[-1][3] if data else 0,
-        latest_hr = data[-1][4] if data else 0,
+        latest_tech=data[-1][2] if data else 0,
+        latest_apt=data[-1][3] if data else 0,
+        latest_hr=data[-1][4] if data else 0,
     )
 
-import os
+# ================= RUN =================
+
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',
-    port=int(os.environ.get('PORT', 5000)))
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

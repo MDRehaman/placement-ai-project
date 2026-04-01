@@ -122,20 +122,10 @@ body {
 
 <h2>Login</h2>
 
-<form method="POST">
-
-<div class="input-group">
-<input type="text" name="student_id" required>
-<label>Student ID</label>
-</div>
-
-<div class="input-group">
-<input type="password" name="password" required>
-<label>Password</label>
-</div>
-
-<button type="submit" class="login-btn">Login</button>
-
+<form method="POST" action="/login">
+    <input type="text" name="student_id" placeholder="ID">
+    <input type="password" name="password" placeholder="Pass">
+    <button type="submit">Login</button>
 </form>
 
 <div class="extra-links">

@@ -63,6 +63,17 @@ def init_db():
     return "DB Created ✅"
 
 # ================= AUTH =================
+@app.route('/check_users')
+def check_users():
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM students")
+    data = cur.fetchall()
+
+    conn.close()
+
+    return str(data)
 
 @app.route('/')
 def home():

@@ -1,0 +1,23 @@
+<h2>Student Test Results</h2>
+
+<table border="1">
+
+<tr>
+<th>Student ID</th>
+<th>Score</th>
+<th>Total</th>
+<th>Date</th>
+</tr>
+
+{% for r in results %}
+
+<tr>
+<td>{{r[1]}}</td>
+<td>{{r[2]}}</td>
+<td>{{r[3]}}</td>
+<td>{{r[4]}}</td>
+</tr>
+
+{% endfor %}
+
+</table>

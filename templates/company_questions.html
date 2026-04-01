@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Interview Questions</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+<style>
+
+body {
+    background: #f4f7fb;
+}
+
+/* SEARCH BAR */
+.search-box {
+    margin-bottom: 20px;
+}
+
+/* FILTER BUTTONS */
+.filter-btn {
+    margin: 5px;
+}
+
+/* QUESTION CARD */
+.question-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 15px;
+
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+
+    transition: 0.3s;
+}
+
+.question-card:hover {
+    transform: translateY(-5px);
+}
+
+.tag {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: white;
+}
+
+.tech { background: #007bff; }
+.apt { background: #28a745; }
+.hr { background: #ff9800; }
+.back-btn {
+    position: fixed;
+    top: 60px;
+    left: 25px;
+
+    padding: 10px 20px;
+    border-radius: 30px;
+
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-weight: 500;
+    text-decoration: none;
+
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+
+    transition: all 0.3s ease;
+}
+
+/* HOVER EFFECT */
+.back-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+/* CLICK EFFECT */
+.back-btn:active {
+    transform: scale(0.95);
+}
+
+/* GLOW ANIMATION */
+.back-btn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    z-index: -1;
+    filter: blur(15px);
+    opacity: 0.6;
+}
+.app-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+
+    padding: 15px;
+    text-align: center;
+
+    font-weight: 600;
+    letter-spacing: 1px;
+
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}
+.question-card {
+    background: #ffffff;
+    padding: 18px;
+    border-radius: 20px;
+    margin-bottom: 15px;
+
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+
+    transition: all 0.3s ease;
+}
+
+.question-card:hover {
+    transform: scale(1.02);
+}
+
+.question-text {
+    font-size: 15px;
+    color: #333;
+    margin-top: 10px;
+}
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+
+    display: flex;
+    justify-content: space-around;
+
+    background: white;
+    padding: 10px 0;
+
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+}
+
+.bottom-nav a {
+    text-decoration: none;
+    font-size: 20px;
+    color: #555;
+}
+
+.bottom-nav a:hover {
+    color: #667eea;
+}
+</style>
+</head>
+
+<body>
+
+{% include 'navbar.html' %}
+<div class="app-header">
+    <h5>{{company}}</h5>
+</div>
+<div class="container mt-5">
+
+<h2 class="text-center">{{company}} Interview Questions</h2>
+
+<!-- SEARCH -->
+<input type="text" id="search" class="form-control search-box" placeholder="Search questions...">
+
+<!-- FILTER -->
+<div class="text-center">
+    <button class="btn btn-outline-primary filter-btn" onclick="filter('all')">All</button>
+    <button class="btn btn-outline-primary filter-btn" onclick="filter('tech')">Technical</button>
+    <button class="btn btn-outline-primary filter-btn" onclick="filter('apt')">Aptitude</button>
+    <button class="btn btn-outline-primary filter-btn" onclick="filter('hr')">HR</button>
+</div>
+
+<!-- QUESTIONS -->
+<div id="questions">
+
+{% if questions %}
+
+{% for q in questions %}
+<div class="question-card" data-type="{{q[2]|lower}}">
+
+    <div class="card-top">
+        <span class="tag {{q[2]|lower}}">{{q[2]}}</span>
+    </div>
+
+    <p class="question-text">{{q[1]}}</p>
+
+</div>
+{% endfor %}
+
+{% else %}
+<p class="text-center text-danger">No questions found</p>
+{% endif %}
+
+</div>
+
+</div>
+
+<script>
+
+// SEARCH
+document.getElementById("search").addEventListener("keyup", function() {
+    let val = this.value.toLowerCase();
+
+    document.querySelectorAll(".question-card").forEach(card => {
+        card.style.display = card.innerText.toLowerCase().includes(val) ? "block" : "none";
+    });
+});
+
+// FILTER
+function filter(type) {
+    document.querySelectorAll(".question-card").forEach(card => {
+        let cardType = card.dataset.type.toLowerCase();
+
+        if (type === "all" || cardType === type) {
+            card.style.display = "block";
+        } else {
+            card.style.display = "none";
+        }
+    });
+}
+
+</script>
+<a href="javascript:history.back()" class="back-btn">
+    ← Back
+</a>
+<div class="bottom-nav">
+    <a href="/dashboard">🏠</a>
+    <a href="/companies">🏢</a>
+    <a href="/test">📝</a>
+    <a href="/history">📊</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Performance Chart</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+<h2>Your Test Performance</h2>
+
+<canvas id="myChart" width="400" height="200"></canvas>
+
+<script>
+
+var scores = {{scores}};
+var totals = {{totals}};
+
+var ctx = document.getElementById('myChart').getContext('2d');
+
+new Chart(ctx,{
+type:'line',
+data:{
+labels: scores,
+datasets:[{
+label:'Score',
+data:scores
+}]
+}
+});
+
+</script>
+
+</body>
+</html>

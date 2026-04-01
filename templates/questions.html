@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Interview Questions</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+<style>
+
+body {
+    background: #f8f9fa;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Title */
+.page-title {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 40px;
+}
+
+/* Card Grid */
+.company-card {
+    background: #fff;
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+    transition: 0.3s;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    cursor: pointer;
+}
+
+.company-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+/* Logo */
+.company-card img {
+    width: 70px;
+    margin-bottom: 10px;
+}
+
+/* Name */
+.company-name {
+    font-weight: 500;
+    color: #333;
+}
+
+/* Search bar */
+.search-box {
+    max-width: 400px;
+    margin: 0 auto 30px;
+}
+.back-btn {
+    position: fixed;
+    top: 60px;
+    left: 25px;
+
+    padding: 10px 20px;
+    border-radius: 30px;
+
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-weight: 500;
+    text-decoration: none;
+
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+
+    transition: all 0.3s ease;
+}
+
+/* HOVER EFFECT */
+.back-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+/* CLICK EFFECT */
+.back-btn:active {
+    transform: scale(0.95);
+}
+
+/* GLOW ANIMATION */
+.back-btn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    z-index: -1;
+    filter: blur(15px);
+    opacity: 0.6;
+}
+</style>
+
+</head>
+
+<body>
+
+{% include 'navbar.html' %}
+
+<div class="container mt-5">
+
+<h2 class="page-title">Interview Questions by Company</h2>
+
+<!-- 🔍 SEARCH -->
+<div class="search-box">
+    <input type="text" id="searchInput" class="form-control" placeholder="Search company...">
+</div>
+
+<div class="row" id="companyList">
+
+{% for company in companies %}
+
+<div class="col-md-3 col-sm-6 mb-4 company-item">
+
+<a href="/questions/{{ company[0] }}" class="text-decoration-none">
+
+<div class="company-card">
+
+<img src="/static/logos/{{ company[0] }}.png"
+     onerror="this.src='https://via.placeholder.com/70'">
+
+<p class="company-name">{{ company[0] }}</p>
+
+</div>
+
+</a>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</div>
+
+<!-- 🔍 SEARCH SCRIPT -->
+<script>
+const searchInput = document.getElementById("searchInput");
+
+searchInput.addEventListener("keyup", function() {
+    let filter = searchInput.value.toLowerCase();
+    let items = document.getElementsByClassName("company-item");
+
+    for (let i = 0; i < items.length; i++) {
+        let text = items[i].innerText.toLowerCase();
+        items[i].style.display = text.includes(filter) ? "" : "none";
+    }
+});
+</script>
+<a href="javascript:history.back()" class="back-btn">
+    ← Back
+</a>
+</body>
+</html>

@@ -20,6 +20,7 @@ def init_db():
     conn = get_db()
     cur = conn.cursor()
 
+    # STUDENTS
     cur.execute("""
     CREATE TABLE IF NOT EXISTS students (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,6 +29,7 @@ def init_db():
     )
     """)
 
+    # QUESTIONS
     cur.execute("""
     CREATE TABLE IF NOT EXISTS questions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,6 +44,7 @@ def init_db():
     )
     """)
 
+    # RESULTS
     cur.execute("""
     CREATE TABLE IF NOT EXISTS results (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,10 +60,18 @@ def init_db():
     )
     """)
 
+    # COMPANIES (IMPORTANT)
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS companies (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT
+    )
+    """)
+
     conn.commit()
     conn.close()
 
-    return "DB Created ✅"
+    return "ALL TABLES CREATED ✅"
 
 # ================= AUTH =================
 @app.route('/check_users')

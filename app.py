@@ -358,6 +358,23 @@ def submit_test():
         analysis=analysis
     )
 
+@app.route('/force_db')
+def force_db():
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS students (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id TEXT,
+        password TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+    return "Students table created ✅"
 # ================= HISTORY =================
 
 @app.route('/history')

@@ -166,7 +166,7 @@ def dashboard():
 def companies():
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM companies")
+    cur.execute("SELECT DISTINCT company_name FROM questions")
     data = cur.fetchall()
     conn.close()
     return render_template("companies.html", companies=data)

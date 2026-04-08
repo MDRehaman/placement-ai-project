@@ -426,17 +426,34 @@ def history():
 
 # ================= RUN =================
 
-@app.route('/debug_questions')
-def debug_questions():
+@app.route('/insert_data')
+def insert_data():
     conn = get_db()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM questions")
-    data = cur.fetchall()
+    data = [
+        ("TCS","tech","What is OOP?","Encapsulation","Inheritance","Polymorphism","All","D"),
+        ("TCS","apt","2+2=?","1","2","3","4","D"),
+        ("TCS","hr","Tell me about yourself","A","B","C","D","A"),
 
+        ("Infosys","tech","What is DBMS?","A","B","C","D","A"),
+        ("Infosys","apt","5*5=?","10","20","25","30","C"),
+        ("Infosys","hr","Why Infosys?","A","B","C","D","A"),
+
+        ("Wipro","tech","What is Python?","A","B","C","D","A"),
+        ("Wipro","apt","10/2=?","2","3","5","8","C"),
+        ("Wipro","hr","Strengths?","A","B","C","D","A")
+    ]
+
+    cur.executemany("""
+    INSERT INTO questions(company_name,type,question,option1,option2,option3,option4,answer)
+    VALUES (?,?,?,?,?,?,?,?)
+    """, data)
+
+    conn.commit()
     conn.close()
 
-    return str(data)
+    return "DATA INSERTED ✅"
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

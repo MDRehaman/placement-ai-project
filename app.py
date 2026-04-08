@@ -62,6 +62,22 @@ def insert_default_data():
     conn = get_db()
     cur = conn.cursor()
 
+    cur.execute("SELECT COUNT(*) FROM companies")
+    count = cur.fetchone()[0]
+
+    if count == 0:
+        companies = [
+            ("TCS",),
+            ("Infosys",),
+            ("Wipro",),
+            ("Accenture",),
+            ("Capgemini",),
+            ("Amazon",),
+            ("Google",)
+        ]
+
+        cur.executemany("INSERT INTO companies(name) VALUES(?)", companies)
+
     cur.execute("SELECT COUNT(*) FROM questions")
     count = cur.fetchone()[0]
 
@@ -84,7 +100,7 @@ def insert_default_data():
         INSERT INTO questions(company_name,type,question,option1,option2,option3,option4,answer)
         VALUES (?,?,?,?,?,?,?,?)
         """, data)
-
+        
         conn.commit()
 
     conn.close()
@@ -243,9 +259,12 @@ def dashboard():
 def companies():
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT DISTINCT company_name FROM questions")
+
+    cur.execute("SELECT name FROM companies")
     data = cur.fetchall()
+
     conn.close()
+
     return render_template("companies.html", companies=data)
 
 # ================= QUESTIONS =================
@@ -297,37 +316,44 @@ def company_questions(company):
 def test():
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT DISTINCT company_name FROM questions")
-    companies = cur.fetchall()
-    conn.close()
-    return render_template("test.html", companies=companies, active_page="test")
 
+    cur.execute("SELECT name FROM companies")
+    companies = cur.fetchall()
+
+    conn.close()
+
+    return render_template("test.html", companies=companies, active_page="test")
 
 @app.route('/start_test/<company>')
 def start_test(company):
-
-    company = company.lower()
 
     conn = get_db()
     cur = conn.cursor()
 
     cur.execute("""
-        SELECT id, question, option1, option2, option3, option4, answer, type
+        SELECT id, question, option1, option2, option3, option4, answer,
+        CASE 
+            WHEN LOWER(type)='technical' THEN 'tech'
+            WHEN LOWER(type)='aptitude' THEN 'apt'
+            WHEN LOWER(type)='hr' THEN 'hr'
+            ELSE LOWER(type)
+        END as type
         FROM questions
-        WHERE LOWER(company_name)=?
+        WHERE LOWER(company_name)=LOWER(?)
         LIMIT 10
     """, (company,))
 
     questions = cur.fetchall()
 
-    session['questions'] = questions  # 🔥 IMPORTANT
+    if not questions:
+        return "No questions found for this company ❌"
 
-    print("DEBUG QUESTIONS:", questions)
+    # 🔥 FIX SESSION (IMPORTANT)
+    session['questions'] = [tuple(q) for q in questions]
 
     conn.close()
 
     return render_template('exam.html', questions=questions, company=company)
-
 
 @app.route('/submit_test', methods=['POST'])
 def submit_test():

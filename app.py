@@ -183,6 +183,7 @@ def questions():
     return render_template("questions.html", companies=companies)
 
 
+
 @app.route('/questions/<company>')
 def company_questions(company):
 
@@ -424,6 +425,18 @@ def history():
     )
 
 # ================= RUN =================
+
+@app.route('/debug_questions')
+def debug_questions():
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM questions")
+    data = cur.fetchall()
+
+    conn.close()
+
+    return str(data)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
